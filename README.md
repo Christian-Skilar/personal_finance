@@ -1,12 +1,21 @@
-# Personal Finance
+# Personal Finance (Gjeld)
 
-Et personlig prosjekt for å holde oversikt over egen økonomi.
+En personlig økonomi-app for Norge. Første versjon handler om gjeld: lån og kreditt, nedbetalingsplaner,
+plan mot faktisk, «hva om»-beregninger og plan for å bli gjeldfri. Appen er en installerbar webapp (PWA)
+for Android, og alle data lagres lokalt på telefonen.
 
-## Status
+## Kom i gang
 
-Prosjektet er i oppstartsfasen. Teknologivalg og struktur er ikke bestemt ennå.
+Krever Node.js (LTS).
+
+```bash
+npm install
+npm run dev      # utviklingsserver
+npm test         # tester
+npm run build    # produksjonsbygg i dist/
+```
 
 ## Personvern
 
-Ekte økonomiske data (kontoutskrifter, eksporter fra banken, nøkler og passord) skal **aldri** committes.
+Ekte økonomiske data (kontoutskrifter, eksporter fra banken, backup-filer, nøkler og passord) skal **aldri** committes.
 Legg slike filer i `data/` eller `private/`, som er utelatt via `.gitignore`.
