@@ -1,5 +1,5 @@
 import { buildSchedule } from './loan-schedule'
-import { interestForYear, loanStatus, termsOf } from './loan-status'
+import { expectedBalance, interestForYear, loanStatus, termsOf } from './loan-status'
 import type { Loan, MonthlyEntry } from './types'
 
 const loan: Loan = {
@@ -66,6 +66,20 @@ test('interestForYear bruker faktisk rente der den er registrert', () => {
   const planYear = plan.filter((r) => r.month.startsWith('2026')).reduce((s, r) => s + r.interest, 0)
   expect(planOnly.soFar).toBe(planYear)
   expect(planOnly.fullYear).toBe(planYear)
+})
+
+test('expectedBalance følger planen uten registreringer', () => {
+  expect(expectedBalance(loan, rates, [], '2026-03')).toBe(plan[1].balance)
+})
+
+test('expectedBalance regner fra siste registrering før måneden', () => {
+  const fromFeb = buildSchedule(termsOf(loan, rates), { fromBalance: 9_000_000, fromMonth: '2026-02' })
+  expect(expectedBalance(loan, rates, [entry('2026-02', 9_000_000), entry('2026-03', 1)], '2026-03')).toBe(fromFeb[0].balance)
+})
+
+test('expectedBalance for kreditt', () => {
+  const credit: Loan = { ...loan, kind: 'kreditt', startBalance: 2_430_000, startDate: '2026-11-13', termMonths: null, monthlyPayment: 200_000, creditLimit: 5_000_000 }
+  expect(expectedBalance(credit, [{ validFrom: '2026-11-13', nominalRate: 2290 }], [], '2026-12')).toBe(2_276_373) // 2 430 000 + 46 373 (46 372,5 rundet opp) − 200 000
 })
 
 test('interestForYear tar med prognose for resten av året', () => {

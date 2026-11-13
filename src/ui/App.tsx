@@ -2,6 +2,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
 import { LoanDetail } from './screens/LoanDetail'
 import { LoanForm } from './screens/LoanForm'
+import { MonthlyUpdate } from './screens/MonthlyUpdate'
 import { LoanList, Overview } from './screens/Overview'
 import { Settings } from './screens/Settings'
 
@@ -19,7 +20,7 @@ export function AppRoutes() {
         <Route path="/lan/:id" element={<LoanDetail />} />
         <Route path="/lan/:id/rediger" element={<LoanForm />} />
         <Route path="/lan/:id/hva-om" element={<Todo title="Hva om" />} />
-        <Route path="/oppdater" element={<Todo title="Månedlig oppdatering" />} />
+        <Route path="/oppdater" element={<MonthlyUpdate />} />
         <Route path="/planer" element={<Todo title="Plan for å bli gjeldfri" />} />
         <Route path="/innstillinger" element={<Settings />} />
       </Route>

@@ -10,6 +10,9 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const kr = (ore: number) => formatNok(ore, { whole: true })
 
+/** Beløp til et redigerbart felt: "2 450 000" eller "1 234,50" (uten "kr"). */
+export const amountField = (ore: number | null) => (ore === null ? '' : formatNok(ore).replace(/\s*kr$/, '').replace(/,00$/, ''))
+
 /** Grense for når avvik vises som "foran/bak" i stedet for "På plan" (100 kr). */
 const ON_PLAN = 10_000
 export const HIGH_RATE: RateBp = 1500

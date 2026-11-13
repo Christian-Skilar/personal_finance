@@ -137,6 +137,25 @@ export function loanStatus(loan: Loan, rates: RateChange[], entries: MonthlyEntr
   }
 }
 
+/** Forventet restgjeld/saldo i `month`, beregnet fra registreringer før måneden (ellers fra planen). */
+export function expectedBalance(loan: Loan, rates: RateChange[], entries: MonthlyEntry[], month: YearMonth): Ore {
+  const prev = latestEntry(entries, addMonths(month, -1))
+  if (loan.kind === 'kreditt') {
+    const fromMonth = prev?.month ?? toYearMonth(loan.startDate)
+    const series = creditSeries(loan, rates, prev?.actualBalance ?? loan.startBalance, fromMonth, month)
+    return series.length ? series[series.length - 1].balance : (prev?.actualBalance ?? loan.startBalance)
+  }
+  const terms = termsOf(loan, rates)
+  if (!prev) return plannedBalanceAt(loan, buildSchedule(terms), month)
+  const forecast = buildSchedule(terms, { fromBalance: prev.actualBalance, fromMonth: prev.month })
+  let balance = prev.actualBalance
+  for (const row of forecast) {
+    if (row.month > month) break
+    balance = row.balance
+  }
+  return balance
+}
+
 /** Renter i et kalenderår: faktisk der registrert, ellers plan; resten av året fra prognosen. */
 export function interestForYear(
   loan: Loan,
