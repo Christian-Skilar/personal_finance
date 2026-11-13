@@ -1,5 +1,6 @@
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
+import { Settings } from './screens/Settings'
 
 function Todo({ title }: { title: string }) {
   return <h1 className="h1">{title}</h1>
@@ -17,7 +18,7 @@ export function AppRoutes() {
         <Route path="/lan/:id/hva-om" element={<Todo title="Hva om" />} />
         <Route path="/oppdater" element={<Todo title="Månedlig oppdatering" />} />
         <Route path="/planer" element={<Todo title="Plan for å bli gjeldfri" />} />
-        <Route path="/innstillinger" element={<Todo title="Backup" />} />
+        <Route path="/innstillinger" element={<Settings />} />
       </Route>
     </Routes>
   )
