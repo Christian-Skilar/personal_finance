@@ -1,0 +1,28 @@
+import { rateAt, type LoanKind, type RateChange } from '../domain/loan-schedule'
+import { formatNok, type RateBp } from '../domain/money'
+import { dueDate, type YearMonth } from '../domain/month'
+import type { LoanItem } from './useLoans'
+
+export const KIND_LABEL: Record<LoanKind, string> = { annuitet: 'Annuitet', serie: 'Serie', kreditt: 'Kreditt' }
+export const KIND_LONG: Record<LoanKind, string> = { annuitet: 'Annuitetslån', serie: 'Serielån', kreditt: 'Kreditt' }
+
+export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+export const kr = (ore: number) => formatNok(ore, { whole: true })
+
+/** Grense for når avvik vises som "foran/bak" i stedet for "På plan" (100 kr). */
+const ON_PLAN = 10_000
+export const HIGH_RATE: RateBp = 1500
+
+export function currentRate(rates: RateChange[], dueDay: number, month: YearMonth): RateBp {
+  return rateAt(rates, dueDate(month, dueDay))
+}
+
+export function statusChip(item: LoanItem, month: YearMonth): { text: string; tone: 'good' | 'warn' } {
+  const { loan, status } = item
+  if (status.paidOff) return { text: 'Nedbetalt', tone: 'good' }
+  if (status.never) return { text: 'Blir aldri nedbetalt', tone: 'warn' }
+  if (loan.kind === 'kreditt' && currentRate(item.rates, loan.dueDay, month) >= HIGH_RATE) return { text: 'Høy rente', tone: 'warn' }
+  if (Math.abs(status.aheadBy) < ON_PLAN) return { text: 'På plan', tone: 'good' }
+  return status.aheadBy > 0 ? { text: `Foran ${kr(status.aheadBy)}`, tone: 'good' } : { text: `Bak ${kr(-status.aheadBy)}`, tone: 'warn' }
+}

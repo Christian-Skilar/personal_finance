@@ -1,6 +1,8 @@
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
+import { LoanDetail } from './screens/LoanDetail'
 import { LoanForm } from './screens/LoanForm'
+import { LoanList, Overview } from './screens/Overview'
 import { Settings } from './screens/Settings'
 
 function Todo({ title }: { title: string }) {
@@ -11,10 +13,10 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Todo title="Gjeld" />} />
-        <Route path="/lan" element={<Todo title="Lån" />} />
+        <Route path="/" element={<Overview />} />
+        <Route path="/lan" element={<LoanList />} />
         <Route path="/lan/ny" element={<LoanForm />} />
-        <Route path="/lan/:id" element={<Todo title="Lån" />} />
+        <Route path="/lan/:id" element={<LoanDetail />} />
         <Route path="/lan/:id/rediger" element={<LoanForm />} />
         <Route path="/lan/:id/hva-om" element={<Todo title="Hva om" />} />
         <Route path="/oppdater" element={<Todo title="Månedlig oppdatering" />} />
