@@ -10,7 +10,35 @@ Installable PWA used on the owner's Android phone. Single user, all data local (
 
 - Spec: `docs/superpowers/specs/2026-11-13-gjeld-v1-design.md`
 - Plan: `docs/superpowers/plans/2026-11-13-gjeld-v1.md`
-- Research: `docs/research/`
+- Research: `docs/research/` (start notes + analyses of the repos securo, actual, finlynq)
+- Screen mockups (design canvas): https://claude.ai/artifact/U36JzyXBkdvSRmRm4SjFEh
+- Android test checklist + Cloudflare deploy steps: `docs/android-sjekkliste.md`
+
+Roadmap: 1) Gjeld (debt) ✅ v1 built → 2) Nettoformue (assets + value history minus debt) → 3) Budsjett (plan vs. actual per category/month).
+
+## Status (last updated 2026-11-13)
+
+**Done:** Debt module v1 is fully built, reviewed and merged to `main` (93 tests green, build OK, pushed).
+Screens: Oversikt, Lån (list + closed loans/reopen), Lån-detalj, Nytt/rediger lån, Månedlig oppdatering,
+Hva om, Gjeldfri-plan (skred/snøball), Backup (Innstillinger). Branch `gjeld-v1` still exists (merged; can be deleted).
+
+**Next session — start here:**
+1. Owner connects the GitHub repo to Cloudflare Pages (steps in `docs/android-sjekkliste.md`), installs the app on the Android phone and runs the checklist. Fix whatever the phone test reveals.
+2. Verify the interest deduction rate (22 % for 2026) against Skatteetaten; rates live in `src/config/satser.ts`.
+3. Deferred minors from the final review (pick as needed):
+   - Extra payments + a future rate change: payment is recomputed over the original term (drops) instead of shortening the term (`loan-schedule.ts`).
+   - PayoffPlan: "tidligere enn uten ekstra" text is wrong when the baseline never finishes; total interest not shown.
+   - Validation errors are not focused/scrolled into view on save (LoanForm, MonthlyUpdate).
+   - No deviation warning when the plan expects 0 (MonthlyUpdate).
+   - `useLoans` has no error handling — a DB load error leaves a blank screen.
+   - Settings download fallback revokes the object URL immediately (defer with setTimeout).
+   - `Date.parse` accepts impossible dates like 2026-02-31 (validate.ts, format.ts `isIsoDate`).
+   - A mistyped rate change cannot be edited or deleted.
+4. Then: brainstorm + spec for module 2, Nettoformue (same process: brainstorm → spec → mockup → plan → TDD build → review).
+
+**Key decisions already made (don't re-litigate):** Norway-only; single user; Android PWA; data local only, no server, no bank integration
+(manual monthly entry); no code copied from AGPL repos (Securo, Finlynq) — Actual (MIT) may be reused with attribution; monthly balance entry
+means "after that month's payment"; edit mode changes rate only via rate history; closed loans are hidden from totals but can be reopened.
 
 ## Stack & commands
 
