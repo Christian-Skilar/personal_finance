@@ -1,5 +1,5 @@
 import { creditPayoff } from './credit'
-import { buildSchedule, monthlyInterest, rateAt, type Installment, type LoanTerms, type RateChange } from './loan-schedule'
+import { buildSchedule, monthlyInterest, rateAt, type Installment, type LoanTerms, type RateChange, type ScheduleOptions } from './loan-schedule'
 import type { Ore } from './money'
 import { addMonths, dueDate, monthsBetween, toYearMonth, type YearMonth } from './month'
 import type { Loan, MonthlyEntry } from './types'
@@ -135,6 +135,13 @@ export function loanStatus(loan: Loan, rates: RateChange[], entries: MonthlyEntr
     plan,
     forecast,
   }
+}
+
+/** Utgangspunkt for prognoser (hva om): siste registrering, ellers planens saldo i `currentMonth`. */
+export function forecastBase(loan: Loan, rates: RateChange[], entries: MonthlyEntry[], currentMonth: YearMonth): ScheduleOptions {
+  const last = latestEntry(entries, currentMonth)
+  if (last) return { fromBalance: last.actualBalance, fromMonth: last.month }
+  return { fromBalance: plannedBalanceAt(loan, buildSchedule(termsOf(loan, rates)), currentMonth), fromMonth: currentMonth }
 }
 
 /** Forventet restgjeld/saldo i `month`, beregnet fra registreringer før måneden (ellers fra planen). */

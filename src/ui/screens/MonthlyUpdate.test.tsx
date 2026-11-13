@@ -49,6 +49,21 @@ test('forhåndsutfyller planens saldo, varsler avvik og lagrer', async () => {
   expect(entries).toEqual([expect.objectContaining({ loanId: id, month: '2026-11', actualBalance: higher * 100, actualInterest: null })])
 })
 
+test('forklarer at restgjeld gjelder etter betalingen', async () => {
+  await createLoan(input, 790)
+  renderIt()
+  expect(await screen.findByText('Etter betalingen 15. november')).toBeInTheDocument()
+})
+
+test('viser feilmelding når lagring feiler', async () => {
+  await createLoan(input, 790)
+  const spy = vi.spyOn(db.monthlyEntries, 'put').mockRejectedValue(new Error('QuotaExceededError'))
+  renderIt()
+  await userEvent.click(await screen.findByRole('button', { name: 'Lagre november' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Kunne ikke lagre. Ta backup og prøv igjen.')
+  spy.mockRestore()
+})
+
 test('ugyldig beløp lagres ikke', async () => {
   await createLoan(input, 790)
   renderIt()

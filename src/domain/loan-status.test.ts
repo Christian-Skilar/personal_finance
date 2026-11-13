@@ -1,5 +1,5 @@
 import { buildSchedule } from './loan-schedule'
-import { expectedBalance, interestForYear, loanStatus, termsOf } from './loan-status'
+import { expectedBalance, forecastBase, interestForYear, loanStatus, termsOf } from './loan-status'
 import type { Loan, MonthlyEntry } from './types'
 
 const loan: Loan = {
@@ -66,6 +66,14 @@ test('interestForYear bruker faktisk rente der den er registrert', () => {
   const planYear = plan.filter((r) => r.month.startsWith('2026')).reduce((s, r) => s + r.interest, 0)
   expect(planOnly.soFar).toBe(planYear)
   expect(planOnly.fullYear).toBe(planYear)
+})
+
+test('forecastBase starter fra dagens planlagte saldo uten registreringer', () => {
+  expect(forecastBase(loan, rates, [], '2026-04')).toEqual({ fromBalance: plan[2].balance, fromMonth: '2026-04' })
+})
+
+test('forecastBase starter fra siste registrering', () => {
+  expect(forecastBase(loan, rates, [entry('2026-02', 9_000_000)], '2026-04')).toEqual({ fromBalance: 9_000_000, fromMonth: '2026-02' })
 })
 
 test('expectedBalance følger planen uten registreringer', () => {

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { db } from '../../data/db'
@@ -6,7 +6,7 @@ import { createLoan } from '../../data/repo'
 import { todayIso } from '../../domain/month'
 import { sp } from '../../test/sp'
 import { LoanDetail } from './LoanDetail'
-import { Overview } from './Overview'
+import { LoanList, Overview } from './Overview'
 
 beforeEach(async () => {
   await Promise.all(db.tables.map((t) => t.clear()))
@@ -50,6 +50,49 @@ test('oversikten summerer gjeld og merker høy rente', async () => {
   const card = screen.getByRole('link', { name: /Kredittkort/ })
   expect(within(card).getByText('Høy rente')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Boliglån/ })).toHaveAttribute('href', expect.stringMatching(/^\/lan\//))
+})
+
+test('oversikten viser prognose for hele året', async () => {
+  await seed()
+  renderApp()
+  expect(await screen.findByText(`Prognose for hele ${todayIso().slice(0, 4)}`)).toBeInTheDocument()
+})
+
+test('renteendring uten dato lagres ikke', async () => {
+  const id = await seed()
+  renderApp(`/lan/${id}`)
+  await userEvent.click(await screen.findByRole('button', { name: 'Registrer renteendring' }))
+  await userEvent.type(screen.getByLabelText('Ny rente (%)'), '4,95')
+  await userEvent.clear(screen.getByLabelText('Gjelder fra'))
+  await userEvent.click(screen.getByRole('button', { name: 'Lagre renteendring' }))
+  expect(screen.getByText('Velg en dato')).toBeInTheDocument()
+  expect(await db.rateChanges.where('loanId').equals(id).count()).toBe(1)
+})
+
+test('marker som nedbetalt krever bekreftelse og kan angres', async () => {
+  const id = await seed()
+  render(
+    <MemoryRouter initialEntries={[`/lan/${id}`]}>
+      <Routes>
+        <Route path="/" element={<p>hjem</p>} />
+        <Route path="/lan" element={<LoanList />} />
+        <Route path="/lan/:id" element={<LoanDetail />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+  await userEvent.click(await screen.findByRole('button', { name: 'Marker som nedbetalt' }))
+  expect((await db.loans.get(id))!.closedAt).toBeNull()
+  await userEvent.click(screen.getByRole('button', { name: 'Ja, marker som nedbetalt' }))
+  expect(await screen.findByText('hjem')).toBeInTheDocument()
+  expect((await db.loans.get(id))!.closedAt).not.toBeNull()
+})
+
+test('lukkede lån kan gjenåpnes fra lånelisten', async () => {
+  const id = await seed()
+  await db.loans.update(id, { closedAt: todayIso() })
+  render(<MemoryRouter><LoanList /></MemoryRouter>)
+  await userEvent.click(await screen.findByRole('button', { name: 'Gjenåpne Boliglån' }))
+  await waitFor(async () => expect((await db.loans.get(id))!.closedAt).toBeNull())
 })
 
 test('lån-detaljen viser terminbeløp og plan', async () => {

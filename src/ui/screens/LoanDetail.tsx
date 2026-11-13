@@ -6,7 +6,7 @@ import { formatNok, formatRate, parseRate } from '../../domain/money'
 import { formatDate, formatMonthShort, todayIso } from '../../domain/month'
 import { Field } from '../components/Field'
 import { PlanChart, type ChartPoint } from '../components/PlanChart'
-import { currentRate, KIND_LONG, kr, statusChip } from '../format'
+import { currentRate, DATE_ERROR, isIsoDate, KIND_LONG, kr, SAVE_ERROR, statusChip } from '../format'
 import { BackIcon, PlusIcon } from '../icons'
 import { currentMonth, useLoan, type LoanItem } from '../useLoans'
 
@@ -73,14 +73,23 @@ function RateHistory({ item, onChange }: { item: LoanItem; onChange: () => void 
   const [rate, setRate] = useState('')
   const [date, setDate] = useState(todayIso())
   const [error, setError] = useState<string>()
+  const [dateError, setDateError] = useState<string>()
+  const [saveError, setSaveError] = useState<string>()
   const sorted = [...item.rates].sort((a, b) => b.validFrom.localeCompare(a.validFrom))
 
   async function save() {
     const r = parseRate(rate)
-    if (r === null) return setError('Renten må være mellom 0 og 100 %')
-    await addRateChange(item.loan.id, { validFrom: date, nominalRate: r })
+    setError(r === null ? 'Renten må være mellom 0 og 100 %' : undefined)
+    setDateError(isIsoDate(date) ? undefined : DATE_ERROR)
+    if (r === null || !isIsoDate(date)) return
+    try {
+      await addRateChange(item.loan.id, { validFrom: date, nominalRate: r })
+    } catch {
+      return setSaveError(SAVE_ERROR)
+    }
     setOpen(false)
     setRate('')
+    setSaveError(undefined)
     onChange()
   }
 
@@ -97,11 +106,16 @@ function RateHistory({ item, onChange }: { item: LoanItem; onChange: () => void 
         <>
           <div className="grid2">
             <Field id="newRate" label="Ny rente (%)" value={rate} onChange={setRate} error={error} inputMode="decimal" />
-            <Field id="newRateDate" label="Gjelder fra" type="date" value={date} onChange={setDate} />
+            <Field id="newRateDate" label="Gjelder fra" type="date" value={date} onChange={setDate} error={dateError} />
           </div>
           <button className="btn" onClick={save}>
             Lagre renteendring
           </button>
+          {saveError && (
+            <p className="err" role="alert">
+              {saveError}
+            </p>
+          )}
         </>
       ) : (
         <button className="btn2" onClick={() => setOpen(true)}>
@@ -117,6 +131,8 @@ export function LoanDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { item, reload } = useLoan(id)
+  const [confirmClose, setConfirmClose] = useState(false)
+  const [closeError, setCloseError] = useState<string>()
   if (!item) return null
 
   const { loan, status } = item
@@ -127,7 +143,11 @@ export function LoanDetail() {
   const points = isCredit ? [] : chartPoints(item)
 
   async function markPaid() {
-    await closeLoan(loan.id, todayIso())
+    try {
+      await closeLoan(loan.id, todayIso())
+    } catch {
+      return setCloseError(SAVE_ERROR)
+    }
     navigate('/')
   }
 
@@ -215,10 +235,30 @@ export function LoanDetail() {
         <Link className="btn2" to={`/lan/${loan.id}/rediger`}>
           Rediger
         </Link>
-        <button className="btn2" onClick={markPaid}>
+        <button className="btn2" onClick={() => setConfirmClose(true)}>
           Marker som nedbetalt
         </button>
       </div>
+      {confirmClose && (
+        <div className="warnbox" role="status">
+          <p style={{ margin: '0 0 10px' }}>
+            {loan.name} flyttes til «Lukkede lån» og telles ikke med i oversikten. Du kan gjenåpne det fra Lån-siden.
+          </p>
+          <div className="grid2">
+            <button className="btn2" onClick={() => setConfirmClose(false)}>
+              Avbryt
+            </button>
+            <button className="btn2" style={{ background: 'var(--warn)', color: '#fff', borderColor: 'var(--warn)' }} onClick={markPaid}>
+              Ja, marker som nedbetalt
+            </button>
+          </div>
+        </div>
+      )}
+      {closeError && (
+        <p className="err" role="alert">
+          {closeError}
+        </p>
+      )}
     </>
   )
 }

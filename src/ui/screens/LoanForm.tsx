@@ -7,6 +7,7 @@ import { formatNok, parseNok, parseRate } from '../../domain/money'
 import { addMonths, formatMonthLong, todayIso, toYearMonth } from '../../domain/month'
 import { validateLoanForm, type LoanForm as Form } from '../../domain/validate'
 import { Field } from '../components/Field'
+import { SAVE_ERROR } from '../format'
 
 const KINDS: { kind: LoanKind; label: string; hint: string }[] = [
   { kind: 'annuitet', label: 'Annuitet', hint: 'Samme beløp hver termin. Vanligst for boliglån, billån og studielån.' },
@@ -45,6 +46,7 @@ export function LoanForm() {
   const editing = Boolean(id)
   const [f, setF] = useState<Form>(empty)
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({})
+  const [saveError, setSaveError] = useState<string>()
 
   useEffect(() => {
     if (!id) return
@@ -78,8 +80,13 @@ export function LoanForm() {
       return
     }
     setErrors({})
-    if (id) await updateLoan(id, result.loan)
-    else await createLoan(result.loan, result.rate)
+    try {
+      if (id) await updateLoan(id, result.loan)
+      else await createLoan(result.loan, result.rate)
+    } catch {
+      setSaveError(SAVE_ERROR)
+      return
+    }
     navigate(id ? `/lan/${id}` : '/')
   }
 
@@ -165,6 +172,11 @@ export function LoanForm() {
       <button className="btn" onClick={onSave}>
         Lagre
       </button>
+      {saveError && (
+        <p className="err" role="alert">
+          {saveError}
+        </p>
+      )}
     </>
   )
 }

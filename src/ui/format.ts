@@ -10,6 +10,10 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const kr = (ore: number) => formatNok(ore, { whole: true })
 
+export const SAVE_ERROR = 'Kunne ikke lagre. Ta backup og prøv igjen.'
+export const DATE_ERROR = 'Velg en dato'
+export const isIsoDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s))
+
 /** 14 → "1 år 2 mnd". */
 export function durationText(months: number): string {
   const y = Math.floor(months / 12)

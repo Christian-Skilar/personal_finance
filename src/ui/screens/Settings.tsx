@@ -29,10 +29,14 @@ export function Settings() {
 
   async function onExport() {
     setError(null)
-    const json = JSON.stringify(await exportBackup(), null, 2)
-    if (await shareOrDownload(backupFileName(todayIso()), json)) {
-      await setSetting('lastBackupAt', new Date().toISOString())
-      setMessage('Backupen er lagret.')
+    try {
+      const json = JSON.stringify(await exportBackup(), null, 2)
+      if (await shareOrDownload(backupFileName(todayIso()), json)) {
+        await setSetting('lastBackupAt', new Date().toISOString())
+        setMessage('Backupen er lagret.')
+      }
+    } catch {
+      setError('Kunne ikke lage backup. Prøv igjen.')
     }
   }
 
@@ -53,7 +57,13 @@ export function Settings() {
 
   async function onConfirm() {
     if (!pending) return
-    await importBackup(pending)
+    try {
+      await importBackup(pending)
+    } catch {
+      setPending(null)
+      setError('Kunne ikke importere backupen. Dataene dine er ikke endret.')
+      return
+    }
     setPending(null)
     setMessage('Backupen er importert.')
   }

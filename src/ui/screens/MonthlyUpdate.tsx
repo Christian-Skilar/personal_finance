@@ -6,7 +6,7 @@ import { parseNok } from '../../domain/money'
 import { formatMonthLong } from '../../domain/month'
 import { MSG } from '../../domain/validate'
 import { Field } from '../components/Field'
-import { amountField, capitalize, kr } from '../format'
+import { amountField, capitalize, kr, SAVE_ERROR } from '../format'
 import { PlusIcon } from '../icons'
 import { currentMonth, useLoans, type LoanItem } from '../useLoans'
 
@@ -37,6 +37,7 @@ export function MonthlyUpdate() {
   const monthName = formatMonthLong(month).split(' ')[0]
   const [rows, setRows] = useState<Record<string, Row>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [saveError, setSaveError] = useState<string>()
 
   const expected = (item: LoanItem) => expectedBalance(item.loan, item.rates, item.entries, month)
 
@@ -71,7 +72,12 @@ export function MonthlyUpdate() {
     })
     setErrors(errs)
     if (Object.keys(errs).length) return
-    await saveMonthlyEntries(entries)
+    try {
+      await saveMonthlyEntries(entries)
+    } catch {
+      setSaveError(SAVE_ERROR)
+      return
+    }
     navigate('/')
   }
 
@@ -112,6 +118,9 @@ export function MonthlyUpdate() {
               inputMode="decimal"
             />
             <span className="lbl num" style={{ fontSize: 12, marginTop: -4 }}>
+              {isCredit ? 'Saldo' : `Etter betalingen ${item.loan.dueDay}. ${monthName}`}
+            </span>
+            <span className="lbl num" style={{ fontSize: 12, marginTop: -8 }}>
               Plan: {kr(exp)}
             </span>
             {warn && (
@@ -141,6 +150,11 @@ export function MonthlyUpdate() {
         <button className="btn" onClick={onSave}>
           Lagre {monthName}
         </button>
+      )}
+      {saveError && (
+        <p className="err" role="alert">
+          {saveError}
+        </p>
       )}
     </>
   )

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import type { ScheduleOptions } from '../../domain/loan-schedule'
-import { latestEntry, termsOf } from '../../domain/loan-status'
+import { forecastBase, termsOf } from '../../domain/loan-status'
 import { formatRate, parseNok } from '../../domain/money'
 import { formatMonthShort } from '../../domain/month'
 import { whatIf } from '../../domain/what-if'
@@ -23,8 +22,7 @@ export function WhatIf() {
   const data = useMemo(() => {
     if (!item || item.loan.kind === 'kreditt' || item.status.paidOff) return null
     const terms = termsOf(item.loan, item.rates)
-    const last = latestEntry(item.entries, month)
-    const base: ScheduleOptions = last ? { fromBalance: last.actualBalance, fromMonth: last.month } : {}
+    const base = forecastBase(item.loan, item.rates, item.entries, month)
     const customOre = parseNok(custom)
     const selected = picked === 'annet' ? customOre : picked
     const rows = whatIf(terms, base, [0, ...PRESETS])
