@@ -10,6 +10,14 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export const kr = (ore: number) => formatNok(ore, { whole: true })
 
+/** 14 → "1 år 2 mnd". */
+export function durationText(months: number): string {
+  const y = Math.floor(months / 12)
+  const m = months % 12
+  if (!y) return `${m} mnd`
+  return m ? `${y} år ${m} mnd` : `${y} år`
+}
+
 /** Beløp til et redigerbart felt: "2 450 000" eller "1 234,50" (uten "kr"). */
 export const amountField = (ore: number | null) => (ore === null ? '' : formatNok(ore).replace(/\s*kr$/, '').replace(/,00$/, ''))
 

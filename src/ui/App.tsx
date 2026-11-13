@@ -3,12 +3,10 @@ import { Layout } from './Layout'
 import { LoanDetail } from './screens/LoanDetail'
 import { LoanForm } from './screens/LoanForm'
 import { MonthlyUpdate } from './screens/MonthlyUpdate'
+import { PayoffPlan } from './screens/PayoffPlan'
+import { WhatIf } from './screens/WhatIf'
 import { LoanList, Overview } from './screens/Overview'
 import { Settings } from './screens/Settings'
-
-function Todo({ title }: { title: string }) {
-  return <h1 className="h1">{title}</h1>
-}
 
 export function AppRoutes() {
   return (
@@ -19,9 +17,9 @@ export function AppRoutes() {
         <Route path="/lan/ny" element={<LoanForm />} />
         <Route path="/lan/:id" element={<LoanDetail />} />
         <Route path="/lan/:id/rediger" element={<LoanForm />} />
-        <Route path="/lan/:id/hva-om" element={<Todo title="Hva om" />} />
+        <Route path="/lan/:id/hva-om" element={<WhatIf />} />
         <Route path="/oppdater" element={<MonthlyUpdate />} />
-        <Route path="/planer" element={<Todo title="Plan for å bli gjeldfri" />} />
+        <Route path="/planer" element={<PayoffPlan />} />
         <Route path="/innstillinger" element={<Settings />} />
       </Route>
     </Routes>
